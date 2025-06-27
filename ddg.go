@@ -297,6 +297,126 @@ func (d *DDGS) Images(
 	return results, nil
 }
 
+// News performs news search on DuckDuckGo
+func (d *DDGS) News(
+	keywords string,
+	region string,
+	safesearch SafeSearchLevel,
+	timelimit Timelimit, // d, w, m
+	maxResults int,
+) ([]map[string]interface{}, error) {
+	if keywords == "" {
+		return nil, fmt.Errorf("keywords is mandatory")
+	}
+
+	// Get VQD token
+	vqd, err := d.getVQD(keywords)
+	if err != nil {
+		return nil, err
+	}
+
+	// Safesearch mapping
+	safesearchMap := map[SafeSearchLevel]string{
+		SafeSearchOn:       "1",
+		SafeSearchModerate: "-1",
+		SafeSearchOff:      "-2",
+	}
+
+	// Build query params
+	params := url.Values{}
+	params.Set("o", "json")
+	params.Set("q", keywords)
+	params.Set("l", region)
+	params.Set("vqd", vqd)
+	params.Set("noamp", "1")
+	params.Set("p", safesearchMap[safesearch])
+	if timelimit != "" {
+		params.Set("df", string(timelimit))
+	}
+
+	// Cache for deduplication
+	seen := map[string]struct{}{}
+	var results []map[string]interface{}
+
+	for i := 0; i < 5; i++ {
+		apiURL := fmt.Sprintf("https://duckduckgo.com/news.js?%s", params.Encode())
+		req, _ := http.NewRequest("GET", apiURL, nil)
+		req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
+		req.Header.Set("Referer", "https://duckduckgo.com/")
+		req.Header.Set("Accept", "*/*")
+		req.Header.Set("Sec-Fetch-Mode", "cors")
+
+		resp, err := d.client.Do(req)
+		if err != nil {
+			return nil, err
+		}
+		body, err := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if err != nil {
+			return nil, err
+		}
+
+		// Debug: Uncomment if needed
+		// fmt.Println("DEBUG Response:", string(body))
+
+		// Parse JSON
+		var respData struct {
+			Results []map[string]interface{} `json:"results"`
+			Next    string                   `json:"next"`
+		}
+		if err := json.Unmarshal(body, &respData); err != nil {
+			return nil, fmt.Errorf("json unmarshal error: %v", err)
+		}
+
+		for _, item := range respData.Results {
+			urlStr, ok := item["url"].(string)
+			if !ok || urlStr == "" {
+				continue
+			}
+			if _, exists := seen[urlStr]; exists {
+				continue
+			}
+			seen[urlStr] = struct{}{}
+
+			// Convert timestamp
+			dateInt, _ := item["date"].(float64)
+			dateStr := ""
+			if dateInt > 0 {
+				date := time.Unix(int64(dateInt), 0).UTC()
+				dateStr = date.Format(time.RFC3339)
+			}
+
+			// Build result map
+			result := map[string]interface{}{
+				"date":   dateStr,
+				"title":  item["title"],
+				"body":   item["excerpt"],
+				"url":    item["url"],
+				"image":  item["image"],
+				"source": item["source"],
+			}
+			results = append(results, result)
+
+			if maxResults > 0 && len(results) >= maxResults {
+				return results, nil
+			}
+		}
+
+		// No next page
+		if respData.Next == "" || maxResults == 0 {
+			break
+		}
+
+		// Extract next s parameter
+		nextS := extractNextS(respData.Next)
+		if nextS != "" {
+			params.Set("s", nextS)
+		}
+	}
+
+	return results, nil
+}
+
 func extractNextS(next string) string {
 	u, err := url.Parse(next)
 	if err != nil {

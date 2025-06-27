@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func TestImagesDDG(t *testing.T) {
+func TestNewsDDG(t *testing.T) {
 	ddgs := ddg_search.NewDDGS(
 		ddg_search.WithProxy("127.0.0.1:7890"), // add proxy
 		ddg_search.WithTimeout(10*time.Second),
@@ -15,7 +15,7 @@ func TestImagesDDG(t *testing.T) {
 	)
 
 	// 文本搜索
-	results, err := ddgs.Images(
+	results, err := ddgs.News(
 		"flower",
 		"wt-wt",
 		ddg_search.SafeSearchModerate,
@@ -27,6 +27,6 @@ func TestImagesDDG(t *testing.T) {
 	}
 
 	for _, r := range results {
-		fmt.Printf("img: %v \n", r)
+		fmt.Printf("news: %v \n", r)
 	}
 }
