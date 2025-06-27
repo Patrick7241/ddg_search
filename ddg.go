@@ -417,6 +417,119 @@ func (d *DDGS) News(
 	return results, nil
 }
 
+// Videos performs video search on DuckDuckGo
+func (d *DDGS) Videos(
+	keywords string,
+	region string,
+	safesearch SafeSearchLevel,
+	timelimit Timelimit, // d, w, m
+	maxResults int,
+) ([]map[string]interface{}, error) {
+	if keywords == "" {
+		return nil, fmt.Errorf("keywords is mandatory")
+	}
+
+	// Get VQD token
+	vqd, err := d.getVQD(keywords)
+	if err != nil {
+		return nil, err
+	}
+
+	// Safesearch mapping
+	safesearchMap := map[SafeSearchLevel]string{
+		SafeSearchOn:       "1",
+		SafeSearchModerate: "-1",
+		SafeSearchOff:      "-2",
+	}
+
+	// Build filters
+	//var filters []string
+	//if timelimit != "" {
+	//	filters = append(filters, "publishedAfter:"+timelimit)
+	//}
+	//if resolution != "" {
+	//	filters = append(filters, "videoDefinition:"+resolution)
+	//}
+	//if duration != "" {
+	//	filters = append(filters, "videoDuration:"+duration)
+	//}
+	//if licenseVideos != "" {
+	//	filters = append(filters, "videoLicense:"+licenseVideos)
+	//}
+
+	// Build query params
+	params := url.Values{}
+	params.Set("o", "json")
+	params.Set("q", keywords)
+	params.Set("l", region)
+	params.Set("vqd", vqd)
+	params.Set("p", safesearchMap[safesearch])
+	//params.Set("f", strings.Join(filters, ","))
+
+	// Deduplication cache
+	seen := map[string]struct{}{}
+	var results []map[string]interface{}
+
+	for i := 0; i < 8; i++ {
+		apiURL := fmt.Sprintf("https://duckduckgo.com/v.js?%s", params.Encode())
+		req, _ := http.NewRequest("GET", apiURL, nil)
+		req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
+		req.Header.Set("Referer", "https://duckduckgo.com/")
+		req.Header.Set("Accept", "*/*")
+		req.Header.Set("Sec-Fetch-Mode", "cors")
+
+		resp, err := d.client.Do(req)
+		if err != nil {
+			return nil, err
+		}
+		body, err := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if err != nil {
+			return nil, err
+		}
+
+		// fmt.Println("DEBUG Response:", string(body))
+
+		var respData struct {
+			Results []map[string]interface{} `json:"results"`
+			Next    string                   `json:"next"`
+		}
+		if err := json.Unmarshal(body, &respData); err != nil {
+			return nil, fmt.Errorf("json unmarshal error: %v", err)
+		}
+
+		for _, item := range respData.Results {
+			contentID, ok := item["content"].(string)
+			if !ok || contentID == "" {
+				continue
+			}
+			if _, exists := seen[contentID]; exists {
+				continue
+			}
+			seen[contentID] = struct{}{}
+
+			results = append(results, item)
+
+			if maxResults > 0 && len(results) >= maxResults {
+				return results, nil
+			}
+		}
+
+		// No more pages
+		if respData.Next == "" || maxResults == 0 {
+			break
+		}
+
+		// Pagination: extract "s" param
+		nextS := extractNextS(respData.Next)
+		if nextS != "" {
+			params.Set("s", nextS)
+		}
+	}
+
+	return results, nil
+}
+
 func extractNextS(next string) string {
 	u, err := url.Parse(next)
 	if err != nil {
