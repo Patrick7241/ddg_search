@@ -2,7 +2,7 @@
 
 **Language Switch**: [中文](README.md) | [English](README_en.md)
 
-`ddg_search` 是一个用 Go 语言实现的 **非官方 DuckDuckGo 搜索接口封装**，通过模拟 DuckDuckGo 网页请求，提供文本搜索功能，支持多种搜索模式、区域、时间限制及安全搜索设置。
+`ddg_search` 是一个用 Go 语言实现的 **非官方 DuckDuckGo 搜索接口封装**，通过模拟 DuckDuckGo 网页请求，提供文本、图片、视频、新闻搜索功能，支持多种搜索模式、区域、时间限制及安全搜索设置。
 
 > **注意**: 该库非 DuckDuckGo 官方 API，可能因网站变动导致失效。
 

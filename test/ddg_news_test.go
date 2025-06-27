@@ -16,7 +16,7 @@ func TestNewsDDG(t *testing.T) {
 
 	// 文本搜索
 	results, err := ddgs.News(
-		"flower",
+		"golang",
 		"wt-wt",
 		ddg_search.SafeSearchModerate,
 		ddg_search.TimelimitAll,

@@ -58,6 +58,31 @@ const (
 	TimelimitAll Timelimit = ""
 )
 
+type resolution string
+
+const (
+	ResolutionHigh     resolution = "high"
+	ResolutionStandard resolution = "standard"
+	ResolutionAll      resolution = ""
+)
+
+type durationTime string
+
+const (
+	DurationShort  durationTime = "short"
+	DurationMedium durationTime = "medium"
+	DurationLong   durationTime = "long"
+	DurationAll    durationTime = ""
+)
+
+type licenseVideos string
+
+const (
+	LicenseCreativeCommon licenseVideos = "creativeCommon"
+	LicenseYouTube        licenseVideos = "youtube"
+	LicenseAll            licenseVideos = ""
+)
+
 type DDGS struct {
 	client         *http.Client
 	headers        map[string]string
@@ -422,7 +447,10 @@ func (d *DDGS) Videos(
 	keywords string,
 	region string,
 	safesearch SafeSearchLevel,
-	timelimit Timelimit, // d, w, m
+	timelimit Timelimit,
+	resolution resolution,
+	duration durationTime,
+	licenseVideos licenseVideos,
 	maxResults int,
 ) ([]map[string]interface{}, error) {
 	if keywords == "" {
@@ -442,21 +470,20 @@ func (d *DDGS) Videos(
 		SafeSearchOff:      "-2",
 	}
 
-	// Build filters
-	//var filters []string
-	//if timelimit != "" {
-	//	filters = append(filters, "publishedAfter:"+timelimit)
-	//}
-	//if resolution != "" {
-	//	filters = append(filters, "videoDefinition:"+resolution)
-	//}
-	//if duration != "" {
-	//	filters = append(filters, "videoDuration:"+duration)
-	//}
-	//if licenseVideos != "" {
-	//	filters = append(filters, "videoLicense:"+licenseVideos)
-	//}
-
+	//Build filters
+	var filters []string
+	if timelimit != "" {
+		filters = append(filters, "publishedAfter:"+string(timelimit))
+	}
+	if resolution != ResolutionAll {
+		filters = append(filters, "videoDefinition:"+string(resolution))
+	}
+	if duration != DurationAll {
+		filters = append(filters, "videoDuration:"+string(duration))
+	}
+	if licenseVideos != LicenseAll {
+		filters = append(filters, "videoLicense:"+string(licenseVideos))
+	}
 	// Build query params
 	params := url.Values{}
 	params.Set("o", "json")
@@ -464,7 +491,7 @@ func (d *DDGS) Videos(
 	params.Set("l", region)
 	params.Set("vqd", vqd)
 	params.Set("p", safesearchMap[safesearch])
-	//params.Set("f", strings.Join(filters, ","))
+	params.Set("f", strings.Join(filters, ","))
 
 	// Deduplication cache
 	seen := map[string]struct{}{}

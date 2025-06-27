@@ -2,7 +2,7 @@
 
 **Language Switch**: [中文](README.md) | [English](README_en.md)
 
-`ddg_search` is an **unofficial DuckDuckGo search API wrapper** implemented in Go. It simulates DuckDuckGo web requests to provide text search functionality, supporting multiple search modes, regions, time filters, and safe search settings.
+`ddg_search` is an **unofficial DuckDuckGo search API wrapper** implemented in Go. It simulates DuckDuckGo web requests to provide text, images, news and videos search functionality, supporting multiple search modes, regions, time filters, and safe search settings.
 
 > **Note**: This library is not an official DuckDuckGo API and may break if DuckDuckGo changes their website.
 

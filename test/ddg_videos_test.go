@@ -16,10 +16,13 @@ func TestVideosDDG(t *testing.T) {
 
 	// 文本搜索
 	results, err := ddgs.Videos(
-		"flower",
+		"how to learn golang",
 		"wt-wt",
 		ddg_search.SafeSearchModerate,
 		ddg_search.TimelimitAll,
+		ddg_search.ResolutionAll,
+		ddg_search.DurationAll,
+		ddg_search.LicenseAll,
 		1,
 	)
 	if err != nil {

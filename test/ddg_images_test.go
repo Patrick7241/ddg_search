@@ -16,7 +16,7 @@ func TestImagesDDG(t *testing.T) {
 
 	// 文本搜索
 	results, err := ddgs.Images(
-		"flower",
+		"golang",
 		"wt-wt",
 		ddg_search.SafeSearchModerate,
 		ddg_search.TimelimitAll,
