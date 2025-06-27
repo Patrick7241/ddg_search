@@ -1,7 +1,6 @@
 package test
 
 import (
-	"fmt"
 	"github.com/Patrick7241/ddg_search"
 	"testing"
 	"time"
@@ -23,10 +22,10 @@ func TestImagesDDG(t *testing.T) {
 		1,
 	)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 
 	for _, r := range results {
-		fmt.Printf("img: %v \n", r)
+		t.Logf("img: %v \n", r)
 	}
 }

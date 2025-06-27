@@ -1,7 +1,6 @@
 package test
 
 import (
-	"fmt"
 	"github.com/Patrick7241/ddg_search"
 	"testing"
 	"time"
@@ -23,10 +22,10 @@ func TestNewsDDG(t *testing.T) {
 		1,
 	)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 
 	for _, r := range results {
-		fmt.Printf("news: %v \n", r)
+		t.Logf("news: %v \n", r)
 	}
 }

@@ -1,7 +1,6 @@
 package test
 
 import (
-	"fmt"
 	"github.com/Patrick7241/ddg_search"
 	"testing"
 	"time"
@@ -26,10 +25,10 @@ func TestVideosDDG(t *testing.T) {
 		1,
 	)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 
 	for _, r := range results {
-		fmt.Printf("videos: %v \n", r)
+		t.Logf("videos: %v \n", r)
 	}
 }

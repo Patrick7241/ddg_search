@@ -1,7 +1,6 @@
 package test
 
 import (
-	"fmt"
 	"github.com/Patrick7241/ddg_search"
 	"testing"
 	"time"
@@ -25,12 +24,12 @@ func TestTextDDG(t *testing.T) {
 		2,
 	)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 
 	i := 1
 	for _, r := range results {
-		fmt.Printf("Title: %s number:%d \n", r["title"], i)
+		t.Logf("Title: %s number:%d \n", r["title"], i)
 		i++
 	}
 }
