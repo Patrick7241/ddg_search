@@ -95,3 +95,9 @@ go get github.com/Patrick7241/ddg_search
 Issues and pull requests are welcome to improve features and stability.
 
 ---
+
+## License
+
+This project is licensed under the [MIT License](LICENSE). For more details, please see the [LICENSE](LICENSE) file.
+
+---
