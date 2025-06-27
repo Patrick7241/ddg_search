@@ -1,4 +1,4 @@
-# ddg\_search
+# ddg_search
 
 **Language Switch**: [中文](README.md) | [English](README_en.md)
 
@@ -16,6 +16,7 @@
 * 支持安全搜索级别配置（开、适中、关）
 * 支持设置代理、请求超时、请求间隔时间（防止频率限制）
 * 支持最大结果数限制
+* 提供命令行工具
 
 ---
 
@@ -23,34 +24,92 @@
 
 ```bash
 go get github.com/Patrick7241/ddg_search
-```
+````
 
 ---
 
 ## 快速开始
 
 ```go
-	ddgs := ddg_search.NewDDGS(
-		ddg_search.WithProxy("your-proxy"),          // 可选，设置代理
-		ddg_search.WithTimeout(10*time.Second),          // 可选，设置请求超时
-		ddg_search.WithSleepDuration(1500*time.Millisecond), // 可选，设置请求间隔
-	)
+ddgs := ddg_search.NewDDGS(
+	ddg_search.WithProxy("your-proxy"),               // 可选，设置代理
+	ddg_search.WithTimeout(10*time.Second),           // 可选，设置请求超时
+	ddg_search.WithSleepDuration(1500*time.Millisecond), // 可选，设置请求间隔
+)
 
-	results, err := ddgs.Text(
-		"golang",                         // 关键词
-		"wt-wt",                         // 地区代码，默认 "wt-wt"
-		ddg_search.SafeSearchModerate,   // 安全搜索等级
-		ddg_search.TimelimitAll,         // 时间限制
-		ddg_search.BackendLite,          // 搜索路径，支持 Auto, HTML, Lite
-		10,                             // 最大结果数
-	)
-	if err != nil {
-		panic(err)
-	}
+results, err := ddgs.Text(
+	"golang",                          // 关键词
+	"wt-wt",                           // 地区代码
+	ddg_search.SafeSearchModerate,     // 安全搜索等级
+	ddg_search.TimelimitAll,           // 时间限制
+	ddg_search.BackendLite,            // 搜索路径
+	10,                                // 最大结果数
+)
+if err != nil {
+	panic(err)
+}
 
-	for i, r := range results {
-		fmt.Printf("%d. %s\nURL: %s\n摘要: %s\n\n", i+1, r["title"], r["href"], r["body"])
-	}
+for i, r := range results {
+	fmt.Printf("%d. %s\nURL: %s\n摘要: %s\n\n", i+1, r["title"], r["href"], r["body"])
+}
+```
+
+---
+
+## 命令行工具
+
+本项目提供一个命令行程序，支持直接通过终端进行 DuckDuckGo 搜索。
+
+### 编译
+
+在项目根目录执行：
+
+```bash
+go build .\cli\ 
+```
+
+将生成一个可执行文件 `cli`。
+
+### 命令行参数
+
+| 参数   | 说明                                         |
+| ---- | ------------------------------------------ |
+| `-q` | **必填**，搜索关键词                               |
+| `-m` | 搜索模式：`text`（默认）、`images`、`news`、`videos`   |
+| `-s` | 安全搜索：`on`、`moderate`（默认）、`off`             |
+| `-t` | 时间限制：`d`(1天)、`w`(1周)、`m`(1月)、`y`(1年)、空(全部) |
+| `-p` | 代理地址（如 `127.0.0.1:7890`），可选                |
+| `-n` | 最大结果数，默认 10                                |
+
+### 使用示例
+
+**查看帮助：**
+```bash
+.\cli.exe -h
+```
+
+**文本搜索：**
+
+```bash
+.\cli.exe -q "golang" -m text -n 5
+```
+
+**图片搜索：**
+
+```bash
+.\cli.exe -q "cat" -m images
+```
+
+**新闻搜索（过去一周）：**
+
+```bash
+.\cli.exe -q "ai news" -m news -t w
+```
+
+**视频搜索（使用代理）：**
+
+```bash
+.\cli.exe -q "golang tutorial" -m videos -p "127.0.0.1:7890"
 ```
 
 ---
@@ -58,7 +117,7 @@ go get github.com/Patrick7241/ddg_search
 ## 主要类型和参数
 
 | 参数名               | 类型     | 说明                                                                                  |
-| ----------------- | ------ |-------------------------------------------------------------------------------------|
+| ----------------- | ------ | ----------------------------------------------------------------------------------- |
 | `SafeSearchLevel` | string | 安全搜索等级：`SafeSearchOn`，`SafeSearchModerate`，`SafeSearchOff`                          |
 | `Backend`         | string | 路径选择：`BackendAuto`，`BackendHTML`，`BackendLite`                                      |
 | `Timelimit`       | string | 时间限制：`TimelimitDay`，`TimelimitWeek`，`TimelimitMonth`，`TimelimitYear`，`TimelimitAll` |
@@ -67,9 +126,9 @@ go get github.com/Patrick7241/ddg_search
 
 ## 可选配置函数（Option）
 
-* `WithProxy(proxy string)` 设置 HTTP 代理（例如 `127.0.0.1:7890`）
-* `WithTimeout(timeout time.Duration)` 设置 HTTP 请求超时时间，默认 10 秒
-* `WithSleepDuration(duration time.Duration)` 设置请求间隔，默认 1500ms，防止请求频率过快被限流
+* `WithProxy(proxy string)` 设置 HTTP 代理（如 `127.0.0.1:7890`）
+* `WithTimeout(timeout time.Duration)` 设置 HTTP 请求超时，默认 10 秒
+* `WithSleepDuration(duration time.Duration)` 设置请求间隔，默认 1500ms，防止频率限制
 
 ---
 
@@ -84,15 +143,15 @@ go get github.com/Patrick7241/ddg_search
 
 ## 注意事项
 
-* 该库依赖于网页爬取实现，DuckDuckGo 网站结构变动可能导致功能失效
-* 请合理设置请求间隔和超时，避免被 DuckDuckGo 封禁IP
-* 该库适合非商业及个人项目使用
+* 该库依赖于网页爬取，DuckDuckGo 网站结构变动可能导致功能失效
+* 请合理设置请求间隔和超时，避免被封禁IP
+* 本库适合非商业及个人项目使用
 
 ---
 
 ## 贡献
 
-欢迎提出 issue 或 PR，改进功能和稳定性。
+欢迎提出 issue 或 PR，共同完善功能与稳定性。
 
 ---
 
@@ -101,6 +160,3 @@ go get github.com/Patrick7241/ddg_search
 此项目采用 [MIT License](LICENSE) 许可证，详情请查看 [LICENSE](LICENSE) 文件。
 
 ---
-
-
-
