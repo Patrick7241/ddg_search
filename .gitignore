@@ -1,0 +1,12 @@
+*.idea/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.tmp
+*.temp
+*.iml
+*.test
+*.out
+*.log
