@@ -245,18 +245,12 @@ func (d *DDGS) Images(
 		return nil, err
 	}
 
-	safesearchMap := map[SafeSearchLevel]string{
-		SafeSearchOn:       "1",
-		SafeSearchModerate: "1",
-		SafeSearchOff:      "-1",
-	}
-
 	params := url.Values{}
 	params.Set("o", "json")
 	params.Set("q", keywords)
 	params.Set("l", region)
 	params.Set("vqd", vqd)
-	params.Set("p", safesearchMap[safesearch])
+	params = d.setSafeSearch(safesearch, params)
 
 	if timelimit != "" {
 		params.Set("f", "time:"+string(timelimit))
@@ -340,13 +334,6 @@ func (d *DDGS) News(
 		return nil, err
 	}
 
-	// Safesearch mapping
-	safesearchMap := map[SafeSearchLevel]string{
-		SafeSearchOn:       "1",
-		SafeSearchModerate: "-1",
-		SafeSearchOff:      "-2",
-	}
-
 	// Build query params
 	params := url.Values{}
 	params.Set("o", "json")
@@ -354,7 +341,8 @@ func (d *DDGS) News(
 	params.Set("l", region)
 	params.Set("vqd", vqd)
 	params.Set("noamp", "1")
-	params.Set("p", safesearchMap[safesearch])
+	params = d.setSafeSearch(safesearch, params)
+
 	if timelimit != "" {
 		params.Set("df", string(timelimit))
 	}
@@ -463,13 +451,6 @@ func (d *DDGS) Videos(
 		return nil, err
 	}
 
-	// Safesearch mapping
-	safesearchMap := map[SafeSearchLevel]string{
-		SafeSearchOn:       "1",
-		SafeSearchModerate: "-1",
-		SafeSearchOff:      "-2",
-	}
-
 	//Build filters
 	var filters []string
 	if timelimit != "" {
@@ -490,8 +471,9 @@ func (d *DDGS) Videos(
 	params.Set("q", keywords)
 	params.Set("l", region)
 	params.Set("vqd", vqd)
-	params.Set("p", safesearchMap[safesearch])
 	params.Set("f", strings.Join(filters, ","))
+
+	params = d.setSafeSearch(safesearch, params)
 
 	// Deduplication cache
 	seen := map[string]struct{}{}
